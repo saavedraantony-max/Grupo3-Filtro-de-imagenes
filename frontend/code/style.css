@@ -1,0 +1,65 @@
+#project {
+    padding: 60px;
+}
+
+#filtro {
+    margin: 10px 0;
+}
+
+#image_picker {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: space-between;
+}
+
+#image_picker button {
+    height: 38px;
+    font-size: 0.8em;
+    margin-right: 8px;
+    border-color: black;
+}
+
+#imagen_filtrada,
+#imagen_original {
+    background-color: White;
+}
+
+.imagenes {
+    text-align: center;
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: space-between;
+}
+.imagenes canvas {
+    margin: 15px;
+    width: 45%;
+}
+
+#integrantes {
+    display: flex;
+    flex-direction: row;
+}
+
+#integrantes p {
+    width: max-content;
+}
+
+@media (max-width: 880px) {
+    #matematica_computacional {
+        font-size: 1em;
+    }
+    .imagenes {
+        flex-direction: column-reverse;
+    }
+    .imagenes canvas {
+        width: 100%;
+    }
+
+    #integrantes {
+        flex-direction: column;
+    }
+}
+
+#image_input {
+    margin: 10px;
+}

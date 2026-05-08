@@ -1,0 +1,7 @@
+#integrantes {
+    display: flex;
+    flex-direction: row;
+}
+#integrantes li {
+    margin: 10px;
+}

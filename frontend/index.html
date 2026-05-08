@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Filtrado de Imágenes — MA475 | UPC</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0a0c14;
+      --surface: #111827;
+      --surf2:   #1f2937;
+      --border:  #1e2a40;
+      --accent:  #6366f1;
+      --accent2: #8b5cf6;
+      --cyan:    #06b6d4;
+      --green:   #10b981;
+      --orange:  #f59e0b;
+      --red:     #ef4444;
+      --text:    #f1f5f9;
+      --muted:   #64748b;
+      --r:       14px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,12,20,.88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px; height: 58px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand {
+      font-weight: 700; font-size: .95rem;
+      background: linear-gradient(90deg, var(--accent), var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 26px; list-style: none; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: .88rem; transition: color .2s; }
+    .nav-links a:hover { color: var(--text); }
+
+    .hero {
+      padding: 72px 32px 56px; text-align: center;
+      background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99,102,241,.17) 0%, transparent 68%);
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(99,102,241,.14); border: 1px solid rgba(99,102,241,.33);
+      color: #a5b4fc; font-size: .72rem; font-weight: 700;
+      letter-spacing: .9px; text-transform: uppercase;
+      padding: 5px 14px; border-radius: 100px; margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(1.9rem, 5vw, 3.2rem); font-weight: 800;
+      letter-spacing: -.5px; line-height: 1.1; margin-bottom: 14px;
+      background: linear-gradient(135deg, #fff 40%, #a5b4fc);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero p { color: var(--muted); font-size: 1rem; max-width: 500px; margin: 0 auto 32px; line-height: 1.7; }
+    .hero-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .hero-cta {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; text-decoration: none; padding: 12px 28px;
+      border-radius: 10px; font-weight: 600; font-size: .92rem;
+      transition: opacity .2s, transform .15s;
+      box-shadow: 0 4px 22px rgba(99,102,241,.32);
+    }
+    .hero-cta:hover { opacity: .88; transform: translateY(-2px); }
+    .hero-cta.ghost {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); box-shadow: none;
+    }
+    .hero-cta.ghost:hover { color: var(--text); border-color: var(--accent); }
+
+    .filter-cards {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(210px,1fr));
+      gap: 14px; max-width: 1060px; margin: 0 auto; padding: 0 32px 64px;
+    }
+    .fcard {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 20px 18px;
+    }
+    .fcard .icon { font-size: 1.5rem; margin-bottom: 8px; }
+    .fcard h3 { font-size: .9rem; font-weight: 600; margin-bottom: 5px; }
+    .fcard p { font-size: .78rem; color: var(--muted); line-height: 1.6; }
+
+    .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 0 32px; }
+
+    .section-wrap { max-width: 1100px; width: 100%; margin: 0 auto; padding: 52px 32px; }
+    .section-header { text-align: center; margin-bottom: 36px; }
+    .section-label { font-size: .7rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+    .section-header h2 { font-size: 1.7rem; font-weight: 700; letter-spacing: -.3px; }
+    .section-header p { color: var(--muted); font-size: .9rem; margin-top: 8px; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 26px 28px; margin-bottom: 20px;
+    }
+    .card:last-child { margin-bottom: 0; }
+    .card-title {
+      font-size: .95rem; font-weight: 700; margin-bottom: 18px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .step-num {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; width: 26px; height: 26px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: .75rem; font-weight: 700; flex-shrink: 0;
+    }
+
+    .canvas-controls {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+      background: var(--surf2); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 16px 20px; margin-bottom: 20px;
+    }
+    .file-label-zip {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 9px; padding: 9px 16px; cursor: pointer;
+      font-size: .85rem; font-weight: 500; transition: border-color .2s;
+    }
+    .file-label-zip:hover { border-color: var(--accent); }
+    #image_input { display: none; }
+
+    select#filtro {
+      appearance: none; -webkit-appearance: none;
+      background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+      border: 1px solid var(--border); border-radius: 9px; color: var(--text);
+      padding: 9px 36px 9px 14px; font-size: .85rem; cursor: pointer; min-width: 150px;
+    }
+    select#filtro:focus { outline: none; border-color: var(--accent); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: none; border-radius: 9px; padding: 9px 18px;
+      font-size: .85rem; font-weight: 600; cursor: pointer;
+      transition: opacity .2s, transform .15s;
+    }
+    .btn:hover:not(:disabled) { opacity: .85; transform: translateY(-1px); }
+    .btn:disabled { opacity: .35; cursor: not-allowed; }
+    .btn-primary  { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+    .btn-ghost    { background: var(--surf2); color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { color: var(--text); }
+    .btn-green    { background: rgba(16,185,129,.15); color: var(--green); border: 1px solid rgba(16,185,129,.3); }
+    .btn-green:hover { background: rgba(16,185,129,.25); }
+    .controls-right { display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap; }
+
+    .canvas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .canvas-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+    .canvas-card-hdr {
+      padding: 10px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px; font-size: .8rem; font-weight: 600; color: var(--muted);
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot-orig { background: var(--cyan); }
+    .dot-filt { background: var(--accent); }
+    .canvas-card canvas { display: block; width: 100%; height: auto; background: #fff; }
+
+    .drop-zone {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 10px; border: 2px dashed var(--border); border-radius: var(--r);
+      padding: 38px 24px; cursor: pointer; transition: border-color .2s, background .2s; color: var(--muted);
+    }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); background: rgba(99,102,241,.06); color: var(--accent); }
+    #file-input { display: none; }
+    #drop-label { font-size: .88rem; }
+
+    .error-box {
+      background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3);
+      color: #fca5a5; border-radius: 8px; padding: 11px 16px; margin-top: 12px; font-size: .83rem;
+    }
+
+    .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px,1fr)); gap: 12px; margin-bottom: 18px; }
+    .filter-option input { display: none; }
+    .filter-card-ui {
+      background: var(--surf2); border: 2px solid var(--border); border-radius: var(--r);
+      padding: 15px 13px; cursor: pointer; display: flex; flex-direction: column; gap: 4px;
+      transition: border-color .2s, background .2s, transform .15s; user-select: none;
+    }
+    .filter-card-ui:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .filter-option input:checked + .filter-card-ui { border-color: var(--accent); background: rgba(99,102,241,.1); }
+    .filter-card-ui .ficon { font-size: 1.3rem; }
+    .filter-card-ui strong { font-size: .9rem; }
+    .filter-card-ui small { color: var(--muted); font-size: .74rem; }
+
+    .result-section { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--border); }
+    .result-section:first-child { margin-top: 0; border-top: none; padding-top: 0; }
+    .result-section h3 { font-size: .92rem; font-weight: 600; color: var(--accent); margin-bottom: 14px; }
+
+    .flex-row { display: flex; flex-wrap: wrap; gap: 18px; }
+    .result-block { display: flex; flex-direction: column; gap: 7px; }
+    .result-block.wide { flex: 1 1 100%; }
+    .result-block h4 { font-size: .75rem; font-weight: 600; color: var(--accent2); text-transform: uppercase; letter-spacing: .5px; }
+
+    .display-img { border-radius: 8px; border: 1px solid var(--border); max-width: 220px; width: 100%; background: #000; image-rendering: pixelated; }
+
+    .matrix-wrap { overflow-x: auto; }
+    .matrix-table { border-collapse: collapse; font-size: .63rem; font-family: 'Consolas','Courier New',monospace; white-space: nowrap; }
+    .matrix-table td { width: 30px; height: 30px; text-align: center; border: 1px solid rgba(255,255,255,.05); font-weight: 500; padding: 0; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .chip { background: var(--surf2); border: 1px solid var(--border); border-radius: 100px; padding: 4px 12px; font-size: .74rem; color: var(--muted); }
+    .chip strong { color: var(--text); }
+
+    .loader { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .info-box {
+      background: rgba(99,102,241,.08); border: 1px solid rgba(99,102,241,.25);
+      border-radius: 10px; padding: 14px 18px; margin-bottom: 18px;
+      font-size: .82rem; line-height: 1.8; color: var(--muted);
+    }
+    .info-box strong { color: var(--text); }
+    .steps-wrap { display: flex; flex-direction: column; gap: 16px; }
+    .steps-row {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+      background: var(--surf2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px;
+    }
+    .step-mat-wrap { display: flex; flex-direction: column; gap: 6px; }
+    .step-mat-label { font-size: .7rem; font-weight: 600; color: var(--muted); white-space: pre-line; text-align: center; }
+    .step-op-label { font-size: 1.6rem; color: var(--muted); padding: 0 4px; font-weight: 300; align-self: center; }
+    .step-mat td, .small-table td { width: 26px; height: 26px; font-size: .6rem; }
+    .step-mat.accent td { border-color: rgba(99,102,241,.3); }
+    .step-mat.green  td { border-color: rgba(16,185,129,.3); }
+    .step-mat.cyan   td { border-color: rgba(6,182,212,.3); }
+    .step-mat.orange td { border-color: rgba(245,158,11,.3); }
+    .step-formula {
+      display: flex; flex-direction: column; gap: 6px;
+      background: var(--surf2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 18px;
+    }
+    .step-eq { font-size: .83rem; color: var(--muted); }
+    .step-eq strong { color: var(--text); font-size: .95rem; }
+    .step-sorted { background: var(--surf2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .step-sorted-label { font-size: .75rem; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
+    .step-sorted-vals { display: flex; flex-wrap: wrap; gap: 6px; }
+    .sorted-val {
+      width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      font-size: .8rem; font-family: 'Consolas', monospace; color: var(--text);
+    }
+    .sorted-median { background: rgba(16,185,129,.2); border-color: var(--green); color: var(--green); font-weight: 700; }
+
+    .team { padding: 60px 32px; text-align: center; background: var(--surface); border-top: 1px solid var(--border); }
+    .team h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 30px; }
+    .team-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; max-width: 680px; margin: 0 auto; }
+    .team-card {
+      background: var(--surf2); border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px 22px; font-size: .88rem; font-weight: 500;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .team-card::before {
+      content: ''; display: inline-block; width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--cyan)); flex-shrink: 0;
+    }
+
+    footer {
+      padding: 20px 32px; border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    }
+    footer p { font-size: .8rem; color: var(--muted); }
+    footer strong { color: var(--text); }
+
+    @media (max-width: 700px) {
+      .canvas-grid { grid-template-columns: 1fr; }
+      .canvas-controls { flex-direction: column; align-items: flex-start; }
+      .controls-right { margin-left: 0; }
+      nav { padding: 0 16px; }
+      .section-wrap { padding: 36px 16px; }
+      .hero { padding: 52px 16px 40px; }
+      .filter-cards { padding: 0 16px 48px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="nav-brand">MA475 · Filtrado de Imágenes</a>
+  <ul class="nav-links">
+    <li><a href="#vista-rapida">Vista Rápida</a></li>
+    <li><a href="#analisis">Análisis</a></li>
+    <li><a href="#team">Equipo</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="badge">Matemática Computacional MA475 · UPC</div>
+  <h1>Filtrado de<br/>Imágenes Digitales</h1>
+  <p>Aplica filtros espaciales sobre imágenes en escala de grises. Visualiza la imagen, su digitalización y representación matricial completa.</p>
+  <div class="hero-btns">
+    <a href="#vista-rapida" class="hero-cta">Vista Rápida →</a>
+    <a href="#analisis" class="hero-cta ghost">Análisis con Matrices →</a>
+  </div>
+</section>
+
+<div class="filter-cards">
+  <div class="fcard"><div class="icon">⊞</div><h3>Media</h3><p>Promedia vecindad 3×3. Suaviza ruido gaussiano.</p></div>
+  <div class="fcard"><div class="icon">⊡</div><h3>Mediana</h3><p>Mediana de vecindad 3×3. Elimina ruido sal y pimienta.</p></div>
+  <div class="fcard"><div class="icon">∇²</div><h3>Laplaciano</h3><p>Segunda derivada isotrópica. Detecta bordes en todas las direcciones.</p></div>
+  <div class="fcard"><div class="icon">∇</div><h3>Sobel</h3><p>Gradiente de intensidad horizontal y vertical combinados.</p></div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section-wrap" id="vista-rapida">
+  <div class="section-header">
+    <p class="section-label">Herramienta</p>
+    <h2>Vista Rápida</h2>
+    <p>Filtra la imagen completa al instante, directamente en el navegador.</p>
+  </div>
+
+  <div class="canvas-controls">
+    <label class="file-label-zip" for="image_input">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      Cargar imagen
+    </label>
+    <input id="image_input" type="file" accept="image/png,image/jpeg,image/jpg" />
+
+    <select id="filtro" name="filtro">
+      <option value="mediana">Mediana</option>
+      <option value="media">Media</option>
+      <option value="laplaciano">Laplaciano</option>
+      <option value="sobel">Sobel</option>
+    </select>
+
+    <div class="controls-right">
+      <button class="btn btn-ghost" onclick="randomImage()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
+          <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
+        </svg>
+        Aleatoria
+      </button>
+      <button class="btn btn-primary" onclick="submit()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
+        Aplicar Filtro
+      </button>
+      <button class="btn btn-green" onclick="downloadCanvas()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Descargar
+      </button>
+    </div>
+  </div>
+
+  <div class="canvas-grid">
+    <div class="canvas-card">
+      <div class="canvas-card-hdr"><span class="dot dot-orig"></span>Imagen Original</div>
+      <canvas id="imagen_original" width="750" height="400"></canvas>
+    </div>
+    <div class="canvas-card">
+      <div class="canvas-card-hdr"><span class="dot dot-filt"></span>Imagen Filtrada</div>
+      <canvas id="imagen_filtrada" width="750" height="400"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section-wrap" id="analisis">
+  <div class="section-header">
+    <p class="section-label">Análisis Completo</p>
+    <h2>Recorte 15×15 + Matrices</h2>
+    <p>Muestra la digitalización, representación matricial y re-escalado según el enunciado. Requiere el backend corriendo: <code style="color:var(--accent)">python app.py</code></p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="step-num">1</span> Cargar Imagen (JPG en escala de grises)</div>
+    <label class="drop-zone" id="drop-zone">
+      <input type="file" id="file-input" accept=".jpg,.jpeg" />
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      <span id="drop-label">Haz clic o arrastra tu imagen aquí</span>
+    </label>
+    <div id="upload-error" class="error-box" hidden></div>
+  </div>
+
+  <div class="card" id="original-section" hidden>
+    <div class="card-title"><span class="step-num">2</span> Imagen Original y Digitalización</div>
+    <div class="flex-row">
+      <div class="result-block">
+        <h4>Imagen original (escala de grises)</h4>
+        <img id="original-img" class="display-img" style="image-rendering:auto;max-width:280px" alt="Original" />
+      </div>
+      <div class="result-block">
+        <h4>Recorte 15×15 px (digitalizado)</h4>
+        <img id="cropped-img" class="display-img" alt="Recorte" />
+      </div>
+      <div class="result-block wide">
+        <h4>Matriz de intensidades — escala de grises (0–255)</h4>
+        <div id="original-matrix" class="matrix-wrap"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="filter-section" hidden>
+    <div class="card-title"><span class="step-num">3</span> Seleccionar y Aplicar Filtro</div>
+    <div class="filter-grid">
+      <label class="filter-option"><input type="radio" name="filter" value="media" />
+        <div class="filter-card-ui"><span class="ficon">⊞</span><strong>Media</strong><small>Promedio 3×3</small></div>
+      </label>
+      <label class="filter-option"><input type="radio" name="filter" value="mediana" />
+        <div class="filter-card-ui"><span class="ficon">⊡</span><strong>Mediana</strong><small>Mediana 3×3</small></div>
+      </label>
+      <label class="filter-option"><input type="radio" name="filter" value="laplaciano" />
+        <div class="filter-card-ui"><span class="ficon">∇²</span><strong>Laplaciano</strong><small>2ª derivada</small></div>
+      </label>
+      <label class="filter-option"><input type="radio" name="filter" value="sobel" />
+        <div class="filter-card-ui"><span class="ficon">∇</span><strong>Sobel</strong><small>Gradiente</small></div>
+      </label>
+    </div>
+    <button id="apply-btn" class="btn btn-primary" disabled>Aplicar Filtro</button>
+    <div id="filter-error" class="error-box" hidden></div>
+  </div>
+
+  <div class="card" id="results-section" hidden>
+    <div class="card-title"><span class="step-num">4</span> Resultados</div>
+    <div id="results-content"></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<section class="team" id="team">
+  <p class="section-label">Integrantes</p>
+  <h2>Nuestro Equipo</h2>
+  <div class="team-grid">
+    <div class="team-card">Casalino Berrocal, Luisa</div>
+    <div class="team-card">Jimenez Saavedra, Antony</div>
+    <div class="team-card">Saavedra Flores, Rodrigo</div>
+    <div class="team-card">Yparraguirre Torres, Javier</div>
+    <div class="team-card">Diaz Luque, Rosa</div>
+  </div>
+</section>
+
+<footer>
+  <p>Trabajo Parcial · <strong>Matemática Computacional MA475</strong> · UPC · 2026</p>
+  <p>Filtros: Media · Mediana · Laplaciano · Sobel</p>
+</footer>
+
+<script src="code/app.js"></script>
+<script src="js/jquery.min.js"></script>
+<script src="js/aos.js"></script>
+<script src="js/smoothscroll.js"></script>
+<script src="js/custom.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
